@@ -53,20 +53,22 @@ namespace PrimerParcial.Controllers
         }
 
         // POST: Recipes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,PreparationTimeMinutes,Servings,Instructions,DateCreated,CategoryId")] Recipe recipe)
+        public async Task<IActionResult> Create([Bind("Title,Description,PreparationTimeMinutes,Servings,Instructions,CategoryId")] Recipe recipe)
         {
-            if (ModelState.IsValid)
+            // Asignar la fecha automáticamente
+            recipe.DateCreated = DateTime.Now;
+
+            if (!ModelState.IsValid)
             {
-                _context.Add(recipe);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", recipe.CategoryId);
+                return View(recipe);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", recipe.CategoryId);
-            return View(recipe);
+
+            _context.Add(recipe);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Recipes/Edit/5
@@ -87,39 +89,47 @@ namespace PrimerParcial.Controllers
         }
 
         // POST: Recipes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PreparationTimeMinutes,Servings,Instructions,DateCreated,CategoryId")] Recipe recipe)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PreparationTimeMinutes,Servings,Instructions,CategoryId")] Recipe recipeInput)
         {
-            if (id != recipe.Id)
+            if (id != recipeInput.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(recipe);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RecipeExists(recipe.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", recipeInput.CategoryId);
+                return View(recipeInput);
             }
-            ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", recipe.CategoryId);
-            return View(recipe);
+
+            // Recuperar el DateCreated original
+            var original = await _context.Recipes.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
+            if (original == null)
+            {
+                return NotFound();
+            }
+
+            recipeInput.DateCreated = original.DateCreated;
+
+            try
+            {
+                _context.Update(recipeInput);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!RecipeExists(recipeInput.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Recipes/Delete/5
@@ -150,9 +160,8 @@ namespace PrimerParcial.Controllers
             if (recipe != null)
             {
                 _context.Recipes.Remove(recipe);
+                await _context.SaveChangesAsync();
             }
-
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

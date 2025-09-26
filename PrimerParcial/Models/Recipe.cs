@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; 
 
 namespace PrimerParcial.Models
 {
@@ -13,7 +14,6 @@ namespace PrimerParcial.Models
         public string Description { get; set; } = "";
 
         public int PreparationTimeMinutes { get; set; }
-
         public int Servings { get; set; }
 
         [Required]
@@ -23,7 +23,9 @@ namespace PrimerParcial.Models
 
         public int CategoryId { get; set; }
 
-        public Category Category { get; set; } = null!;
+        [ValidateNever]
+        public Category? Category { get; set; } 
+
         public ICollection<Ingredient> Ingredients { get; set; } = new List<Ingredient>();
     }
 }

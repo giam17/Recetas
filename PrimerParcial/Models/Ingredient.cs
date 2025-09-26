@@ -1,24 +1,22 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; 
 
 namespace PrimerParcial.Models
 {
     public class Ingredient
     {
-        // Clave Primaria (PK)
         public int Id { get; set; }
 
-        [Required]
-        public string Name { get; set; } // Ejemplo: "Harina de Trigo"
+        [Required, StringLength(100)]
+        public string Name { get; set; } = "";  
 
-        [Required]
-        public string Quantity { get; set; } // Ejemplo: "2 tazas" o "500 gramos"
+        [Required, StringLength(50)]
+        public string Quantity { get; set; } = ""; 
 
-        // --- Relaciones de Entity Framework Core ---
-
-        // Clave Foránea (FK): Vincula este ingrediente a la receta
+        [Range(1, int.MaxValue, ErrorMessage = "Selecciona una receta válida.")]
         public int RecipeId { get; set; }
 
-        // Propiedad de Navegación: El lado 'uno'
-        public Recipe Recipe { get; set; }
+        [ValidateNever]
+        public Recipe? Recipe { get; set; }
     }
 }
